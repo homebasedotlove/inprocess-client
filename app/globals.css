@@ -6,10 +6,6 @@
   --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
 }
 
-* {
-  box-sizing: border-box;
-}
-
 html {
   background-color: #0d0d0d;
   color: #efefef;

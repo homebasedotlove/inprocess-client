@@ -5,6 +5,7 @@ import { RefreshCw } from 'lucide-react'
 import { MomentCard } from '@/components/MomentCard'
 import type { Moment } from '@/lib/inprocess'
 
+// Collection is locked server-side in /api/timeline — not passed from client.
 const PLATFORM_COLLECTION = process.env.NEXT_PUBLIC_PLATFORM_COLLECTION
 
 export default function DiscoverPage() {
@@ -21,8 +22,6 @@ export default function DiscoverPage() {
       else setRefreshing(true)
 
       const params = new URLSearchParams({ page: String(p), limit: '18' })
-      if (PLATFORM_COLLECTION) params.set('collection', PLATFORM_COLLECTION)
-
       const res = await fetch(`/api/timeline?${params}`)
       if (!res.ok) throw new Error(`Failed to load feed (${res.status})`)
       const data = await res.json()

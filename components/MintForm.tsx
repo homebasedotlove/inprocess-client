@@ -28,15 +28,16 @@ export function MintForm() {
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
     if (!f) return
+    if (preview) URL.revokeObjectURL(preview)
     setFile(f)
-    const url = URL.createObjectURL(f)
-    setPreview(url)
+    setPreview(URL.createObjectURL(f))
   }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault()
     const f = e.dataTransfer.files[0]
     if (!f) return
+    if (preview) URL.revokeObjectURL(preview)
     setFile(f)
     setPreview(URL.createObjectURL(f))
   }
@@ -69,7 +70,7 @@ export function MintForm() {
   async function handleMint(e: React.FormEvent) {
     e.preventDefault()
 
-    if (!isConnected) {
+    if (!isConnected || !address) {
       openConnectModal?.()
       return
     }

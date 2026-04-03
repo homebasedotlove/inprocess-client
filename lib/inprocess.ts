@@ -85,23 +85,6 @@ export function resolveUri(uri: string): string {
   return uri
 }
 
-/** Fetch timeline moments, optionally filtered by collection */
-export async function fetchTimeline(params: {
-  collection?: string
-  page?: number
-  limit?: number
-}): Promise<TimelineResponse> {
-  const url = new URL(`${INPROCESS_API}/timeline`)
-  if (params.collection) url.searchParams.set('collection', params.collection)
-  if (params.page) url.searchParams.set('page', String(params.page))
-  url.searchParams.set('limit', String(params.limit ?? 20))
-  url.searchParams.set('chain_id', String(CHAIN_ID))
-
-  const res = await fetch(url.toString(), { next: { revalidate: 30 } })
-  if (!res.ok) throw new Error(`Timeline fetch failed: ${res.status}`)
-  return res.json()
-}
-
 /** Fetch metadata from an Arweave/IPFS URI */
 export async function fetchMetadata(uri: string): Promise<Moment['metadata']> {
   try {
@@ -132,21 +115,6 @@ export interface MomentDetail {
     animation_url?: string
     content?: { mime?: string; uri?: string }
   }
-}
-
-/** Fetch full moment details including saleConfig and price */
-export async function fetchMoment(
-  collectionAddress: string,
-  tokenId: string,
-  chainId = CHAIN_ID
-): Promise<MomentDetail> {
-  const url = new URL(`${INPROCESS_API}/moment`)
-  url.searchParams.set('collectionAddress', collectionAddress)
-  url.searchParams.set('tokenId', tokenId)
-  url.searchParams.set('chainId', String(chainId))
-  const res = await fetch(url.toString())
-  if (!res.ok) throw new Error(`Failed to fetch moment: ${res.status}`)
-  return res.json()
 }
 
 /** Format wei price to a human-readable ETH string (BigInt-safe via viem) */

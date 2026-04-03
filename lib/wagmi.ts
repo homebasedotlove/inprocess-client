@@ -1,12 +1,9 @@
-'use client'
-
 import { connectorsForWallets } from '@rainbow-me/rainbowkit'
 import {
   injectedWallet,
   metaMaskWallet,
-  coinbaseWallet,
+  baseAccount,
   rabbyWallet,
-  safeWallet,
 } from '@rainbow-me/rainbowkit/wallets'
 import { createConfig, http } from 'wagmi'
 import { base } from 'wagmi/chains'
@@ -15,13 +12,18 @@ const connectors = connectorsForWallets(
   [
     {
       groupName: 'Wallets',
-      wallets: [injectedWallet, metaMaskWallet, coinbaseWallet, rabbyWallet, safeWallet],
+      wallets: [
+        injectedWallet,
+        metaMaskWallet,
+        baseAccount({ appName: 'inprocess client' }),
+        rabbyWallet,
+      ],
     },
   ],
   {
     appName: 'inprocess client',
-    // projectId is required by RainbowKit's types but is only consumed by the
-    // WalletConnect connector — which we intentionally exclude above.
+    // projectId is required by the type signature but is only consumed by
+    // walletConnectWallet, which is not included above.
     projectId: 'inprocess-client',
   }
 )
