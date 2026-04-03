@@ -27,7 +27,7 @@ export default function DiscoverPage() {
       const data = await res.json()
 
       setMoments((prev) => append ? [...prev, ...data.moments] : data.moments)
-      setTotalPages(data.pagination?.totalPages ?? 1)
+      setTotalPages(data.pagination?.total_pages ?? 1)
       setPage(p)
       setError(null)
     } catch (err) {
@@ -107,7 +107,7 @@ export default function DiscoverPage() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-[#2a2a2a]">
             {moments.map((moment) => (
-              <div key={`${moment.collectionAddress}-${moment.tokenId}`} className="bg-[#0d0d0d]">
+              <div key={`${moment.address}-${moment.token_id}`} className="bg-[#0d0d0d]">
                 <MomentCard moment={moment} />
               </div>
             ))}

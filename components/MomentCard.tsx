@@ -3,37 +3,37 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { CollectButton } from './CollectButton'
-import { resolveUri, fetchMetadata, formatPrice, shortAddress, type Moment, type MomentDetail } from '@/lib/inprocess'
+import { resolveUri, fetchMetadata, formatPrice, shortAddress, type Moment, type MomentDetail, type MomentMetadata } from '@/lib/inprocess'
 
 interface MomentCardProps {
   moment: Moment
 }
 
 export function MomentCard({ moment }: MomentCardProps) {
-  const [meta, setMeta] = useState(moment.metadata ?? {})
+  const [meta, setMeta] = useState<MomentMetadata>({})
   const [imgError, setImgError] = useState(false)
   const [price, setPrice] = useState<string | null>(null)
 
+  // Fetch token metadata from Arweave (not included in timeline response)
   useEffect(() => {
-    if (!moment.metadata?.name && moment.uri) {
-      fetchMetadata(moment.uri).then((m) => {
-        if (m) setMeta(m)
-      })
-    }
-  }, [moment.uri, moment.metadata])
+    if (!moment.uri) return
+    fetchMetadata(moment.uri).then((m) => {
+      if (m) setMeta(m)
+    })
+  }, [moment.uri])
 
+  // Fetch sale config for price display via our proxy
   useEffect(() => {
-    // Route through our proxy to avoid potential CORS issues and get caching
     const params = new URLSearchParams({
-      collectionAddress: moment.collectionAddress,
-      tokenId: moment.tokenId,
+      collectionAddress: moment.address,
+      tokenId: moment.token_id,
       chainId: '8453',
     })
     fetch(`/api/moment?${params}`)
       .then((r) => r.ok ? r.json() as Promise<MomentDetail> : Promise.reject())
       .then((detail) => setPrice(formatPrice(detail.saleConfig.pricePerToken)))
       .catch(() => {})
-  }, [moment.collectionAddress, moment.tokenId])
+  }, [moment.address, moment.token_id])
 
   const imageUrl = meta.image ? resolveUri(meta.image) : null
   const isVideo =
@@ -41,7 +41,7 @@ export function MomentCard({ moment }: MomentCardProps) {
     meta.animation_url?.endsWith('.mp4') ||
     meta.animation_url?.endsWith('.webm')
 
-  const mediaUrl = meta.animation_url ? resolveUri(meta.animation_url) : imageUrl
+  const mediaUrl = isVideo && meta.animation_url ? resolveUri(meta.animation_url) : imageUrl
 
   return (
     <article className="group flex flex-col bg-[#161616] border border-[#2a2a2a] overflow-hidden">
@@ -76,7 +76,7 @@ export function MomentCard({ moment }: MomentCardProps) {
       <div className="p-4 flex flex-col gap-3">
         <div>
           <h3 className="text-sm text-[#efefef] font-mono truncate">
-            {meta.name ?? `#${moment.tokenId}`}
+            {meta.name ?? `#${moment.token_id}`}
           </h3>
           {meta.description && (
             <p className="text-xs text-[#888] mt-1 line-clamp-2 leading-relaxed">
@@ -88,13 +88,13 @@ export function MomentCard({ moment }: MomentCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-0.5">
             <a
-              href={`https://inprocess.world/collect/base:${moment.collectionAddress}/${moment.tokenId}`}
+              href={`https://inprocess.world/collect/base:${moment.address}/${moment.token_id}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-[#555] font-mono hover:text-[#888] transition-colors"
-              title={moment.default_admin}
+              title={moment.default_admin.address}
             >
-              {shortAddress(moment.default_admin)}
+              {shortAddress(moment.default_admin.address)}
             </a>
             {price !== null && (
               <span className="text-xs font-mono text-[#d4f53c]">{price}</span>
@@ -102,8 +102,8 @@ export function MomentCard({ moment }: MomentCardProps) {
           </div>
 
           <CollectButton
-            collectionAddress={moment.collectionAddress}
-            tokenId={moment.tokenId}
+            collectionAddress={moment.address}
+            tokenId={moment.token_id}
           />
         </div>
       </div>

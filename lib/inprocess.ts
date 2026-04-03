@@ -11,26 +11,29 @@ export interface SalesConfig {
   currency?: string
 }
 
+// Admin object shape returned by the timeline API
+export interface MomentAdmin {
+  address: string
+  username?: string
+  hidden: boolean
+}
+
+// Moment object as returned by GET /api/timeline (snake_case field names)
 export interface Moment {
-  collectionAddress: string
-  tokenId: string
-  uri: string
-  default_admin: string
-  admins: string[]
-  createdAt: string
-  updatedAt: string
-  metadata?: {
-    name?: string
-    description?: string
-    image?: string
-    animation_url?: string
-    content?: { mime?: string; uri?: string }
-  }
+  address: string         // collection contract address
+  token_id: string
+  chain_id?: number
+  id?: string             // UUID
+  uri: string             // Arweave metadata URI — metadata is NOT inlined
+  default_admin: MomentAdmin
+  admins: MomentAdmin[]
+  created_at: string
+  updated_at: string
 }
 
 export interface TimelineResponse {
   moments: Moment[]
-  pagination: { page: number; limit: number; totalPages: number }
+  pagination: { page: number; limit: number; total_pages: number }
   status: string
 }
 
@@ -85,8 +88,17 @@ export function resolveUri(uri: string): string {
   return uri
 }
 
-/** Fetch metadata from an Arweave/IPFS URI */
-export async function fetchMetadata(uri: string): Promise<Moment['metadata']> {
+// Metadata stored on Arweave — fetched separately from the timeline
+export interface MomentMetadata {
+  name?: string
+  description?: string
+  image?: string
+  animation_url?: string
+  content?: { mime?: string; uri?: string }
+}
+
+/** Fetch token metadata from an Arweave/IPFS URI */
+export async function fetchMetadata(uri: string): Promise<MomentMetadata> {
   try {
     const url = resolveUri(uri)
     if (!url) return {}
