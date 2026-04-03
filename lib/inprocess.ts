@@ -113,6 +113,48 @@ export async function fetchMetadata(uri: string): Promise<Moment['metadata']> {
   }
 }
 
+export interface MomentDetail {
+  uri: string
+  owner: string
+  saleConfig: {
+    pricePerToken: string
+    saleStart: string
+    saleEnd: string
+    currency?: string
+  }
+  momentAdmins: string[]
+  metadata: {
+    name?: string
+    description?: string
+    image?: string
+    animation_url?: string
+    content?: { mime?: string; uri?: string }
+  }
+}
+
+/** Fetch full moment details including saleConfig and price */
+export async function fetchMoment(
+  collectionAddress: string,
+  tokenId: string,
+  chainId = CHAIN_ID
+): Promise<MomentDetail> {
+  const url = new URL(`${INPROCESS_API}/moment`)
+  url.searchParams.set('collectionAddress', collectionAddress)
+  url.searchParams.set('tokenId', tokenId)
+  url.searchParams.set('chainId', String(chainId))
+  const res = await fetch(url.toString())
+  if (!res.ok) throw new Error(`Failed to fetch moment: ${res.status}`)
+  return res.json()
+}
+
+/** Format wei price to a human-readable ETH string */
+export function formatPrice(pricePerToken: string): string {
+  const wei = BigInt(pricePerToken)
+  if (wei === 0n) return 'free'
+  const eth = Number(wei) / 1e18
+  return `${eth % 1 === 0 ? eth.toFixed(0) : eth.toPrecision(4)} ETH`
+}
+
 /** Shorten an Ethereum address for display */
 export function shortAddress(address: string): string {
   if (!address) return ''

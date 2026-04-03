@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { CollectButton } from './CollectButton'
-import { resolveUri, fetchMetadata, shortAddress, type Moment } from '@/lib/inprocess'
+import { resolveUri, fetchMetadata, fetchMoment, formatPrice, shortAddress, type Moment } from '@/lib/inprocess'
 
 interface MomentCardProps {
   moment: Moment
@@ -12,6 +12,7 @@ interface MomentCardProps {
 export function MomentCard({ moment }: MomentCardProps) {
   const [meta, setMeta] = useState(moment.metadata ?? {})
   const [imgError, setImgError] = useState(false)
+  const [price, setPrice] = useState<string | null>(null)
 
   useEffect(() => {
     if (!moment.metadata?.name && moment.uri) {
@@ -20,6 +21,12 @@ export function MomentCard({ moment }: MomentCardProps) {
       })
     }
   }, [moment.uri, moment.metadata])
+
+  useEffect(() => {
+    fetchMoment(moment.collectionAddress, moment.tokenId)
+      .then((detail) => setPrice(formatPrice(detail.saleConfig.pricePerToken)))
+      .catch(() => {})
+  }, [moment.collectionAddress, moment.tokenId])
 
   const imageUrl = meta.image ? resolveUri(meta.image) : null
   const isVideo =
@@ -72,15 +79,20 @@ export function MomentCard({ moment }: MomentCardProps) {
         </div>
 
         <div className="flex items-center justify-between">
-          <a
-            href={`https://inprocess.world/collect/base:${moment.collectionAddress}/${moment.tokenId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-[#555] font-mono hover:text-[#888] transition-colors"
-            title={moment.default_admin}
-          >
-            {shortAddress(moment.default_admin)}
-          </a>
+          <div className="flex flex-col gap-0.5">
+            <a
+              href={`https://inprocess.world/collect/base:${moment.collectionAddress}/${moment.tokenId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-[#555] font-mono hover:text-[#888] transition-colors"
+              title={moment.default_admin}
+            >
+              {shortAddress(moment.default_admin)}
+            </a>
+            {price !== null && (
+              <span className="text-xs font-mono text-[#d4f53c]">{price}</span>
+            )}
+          </div>
 
           <CollectButton
             collectionAddress={moment.collectionAddress}
