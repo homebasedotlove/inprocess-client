@@ -1,3 +1,5 @@
+import { formatEther } from 'viem'
+
 export const INPROCESS_API = 'https://inprocess.world/api'
 export const CHAIN_ID = 8453 // Base mainnet
 
@@ -147,12 +149,14 @@ export async function fetchMoment(
   return res.json()
 }
 
-/** Format wei price to a human-readable ETH string */
+/** Format wei price to a human-readable ETH string (BigInt-safe via viem) */
 export function formatPrice(pricePerToken: string): string {
   const wei = BigInt(pricePerToken)
   if (wei === 0n) return 'free'
-  const eth = Number(wei) / 1e18
-  return `${eth % 1 === 0 ? eth.toFixed(0) : eth.toPrecision(4)} ETH`
+  const eth = formatEther(wei)
+  // Trim trailing zeros: "0.100000…" → "0.1"
+  const trimmed = eth.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '')
+  return `${trimmed} ETH`
 }
 
 /** Shorten an Ethereum address for display */

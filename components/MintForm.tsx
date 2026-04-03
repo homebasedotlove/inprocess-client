@@ -5,6 +5,7 @@ import { useAccount } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { toast } from 'sonner'
 import { Upload, X } from 'lucide-react'
+import { parseEther } from 'viem'
 import type { CreateMomentPayload } from '@/lib/inprocess'
 
 const PLATFORM_COLLECTION = process.env.NEXT_PUBLIC_PLATFORM_COLLECTION
@@ -103,7 +104,7 @@ export function MintForm() {
       setStep('minting')
       toast.loading('Minting moment…', { id: 'mint' })
 
-      const priceInWei = BigInt(Math.round(parseFloat(price || '0') * 1e18)).toString()
+      const priceInWei = parseEther(price || '0').toString()
       const now = Math.floor(Date.now() / 1000)
 
       const payload: CreateMomentPayload = {
