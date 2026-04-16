@@ -15,7 +15,7 @@ const connectors = connectorsForWallets(
       wallets: [
         injectedWallet,
         metaMaskWallet,
-        baseAccount({ appName: 'inprocess client' }),
+        () => baseAccount({ appName: 'inprocess client' }),
         rabbyWallet,
       ],
     },

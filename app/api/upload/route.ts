@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { TurboFactory } from '@ardrive/turbo-sdk'
 
+// Arweave RSA-PSS JWK — matches JWKInterface in the Turbo SDK internals
+interface ArweaveJWK {
+  kty: string
+  n: string
+  e: string
+  d?: string
+  p?: string
+  q?: string
+  dp?: string
+  dq?: string
+  qi?: string
+}
+
 const ALLOWED_MIME_TYPES = new Set([
   'image/jpeg',
   'image/png',
@@ -16,7 +29,7 @@ const MAX_FILE_BYTES = 100 * 1024 * 1024 // 100 MB
 async function uploadToArweave(
   data: Buffer,
   contentType: string,
-  key: object
+  key: ArweaveJWK
 ): Promise<string> {
   const turbo = TurboFactory.authenticated({ privateKey: key })
   const { id } = await turbo.uploadFile({
@@ -35,9 +48,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'ARWEAVE_KEY not configured' }, { status: 500 })
   }
 
-  let key: object
+  let key: ArweaveJWK
   try {
-    key = JSON.parse(Buffer.from(arweaveKey, 'base64').toString('utf-8'))
+    key = JSON.parse(Buffer.from(arweaveKey, 'base64').toString('utf-8')) as ArweaveJWK
   } catch {
     return NextResponse.json(
       { error: 'Invalid ARWEAVE_KEY format — must be base64-encoded JWK' },
