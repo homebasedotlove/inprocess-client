@@ -9,9 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ardrive/turbo-sdk": "^1.41.0",
     "@rainbow-me/rainbowkit": "^2.2.0",
     "@tanstack/react-query": "^5.56.2",
-    "arweave": "^1.15.5",
     "lucide-react": "^0.453.0",
     "next": "15.1.0",
     "react": "^19.0.0",
