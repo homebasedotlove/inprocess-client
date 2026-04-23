@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { CollectButton } from './CollectButton'
-import { resolveUri, fetchMetadata, formatPrice, shortAddress, type Moment, type MomentDetail, type MomentMetadata } from '@/lib/inprocess'
+import { resolveUri, fetchMetadata, formatPrice, shortAddress, INPROCESS_API, type Moment, type MomentDetail, type MomentMetadata } from '@/lib/inprocess'
 
 interface MomentCardProps {
   moment: Moment
@@ -22,14 +22,14 @@ export function MomentCard({ moment }: MomentCardProps) {
     })
   }, [moment.uri])
 
-  // Fetch sale config for price display via our proxy
+  // Fetch sale config directly from inprocess for price display
   useEffect(() => {
     const params = new URLSearchParams({
       collectionAddress: moment.address,
       tokenId: moment.token_id,
       chainId: '8453',
     })
-    fetch(`/api/moment?${params}`)
+    fetch(`${INPROCESS_API}/moment?${params}`)
       .then((r) => r.ok ? r.json() as Promise<MomentDetail> : Promise.reject())
       .then((detail) => setPrice(formatPrice(detail.saleConfig.pricePerToken)))
       .catch(() => {})
