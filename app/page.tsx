@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { MomentCard } from '@/components/MomentCard'
-import type { Moment } from '@/lib/inprocess'
+import { INPROCESS_API, type Moment } from '@/lib/inprocess'
 
-// Collection is locked server-side in /api/timeline — not passed from client.
+// Scopes the feed to moments from this client's collection.
 const PLATFORM_COLLECTION = process.env.NEXT_PUBLIC_PLATFORM_COLLECTION
 
 export default function DiscoverPage() {
@@ -21,8 +21,13 @@ export default function DiscoverPage() {
       if (p === 1 && !append) setLoading(true)
       else setRefreshing(true)
 
-      const params = new URLSearchParams({ page: String(p), limit: '18' })
-      const res = await fetch(`/api/timeline?${params}`)
+      const params = new URLSearchParams({
+        page: String(p),
+        limit: '18',
+        chain_id: '8453',
+      })
+      if (PLATFORM_COLLECTION) params.set('collection', PLATFORM_COLLECTION)
+      const res = await fetch(`${INPROCESS_API}/timeline?${params}`)
       if (!res.ok) throw new Error(`Failed to load feed (${res.status})`)
       const data = await res.json()
 

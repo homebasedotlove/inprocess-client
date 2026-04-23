@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { Upload, X } from 'lucide-react'
 import { parseEther } from 'viem'
 import type { CreateMomentPayload } from '@/lib/inprocess'
+import { INPROCESS_API } from '@/lib/inprocess'
 
 const PLATFORM_COLLECTION = process.env.NEXT_PUBLIC_PLATFORM_COLLECTION
 const CREATE_REFERRAL = process.env.NEXT_PUBLIC_CREATE_REFERRAL ?? '0x0000000000000000000000000000000000000000'
@@ -130,13 +131,31 @@ export function MintForm() {
         account: address!,
       }
 
-      const res = await fetch('/api/mint', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? data.message ?? 'Mint failed')
+      // Call inprocess directly from the browser — matches the reference
+      // implementation in sweetmantech/in_process. No API key, no signature.
+      // Retry up to 3 times on "failed to estimate gas" (transient RPC issue).
+      const maxRetries = 3
+      let data: { contractAddress: string; tokenId: string; hash: string; chainId: number } | null = null
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        const res = await fetch(`${INPROCESS_API}/moment/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (res.ok) {
+          data = await res.json()
+          break
+        }
+        const err = await res.json().catch(() => ({ message: 'Mint failed' }))
+        const msg = err.error ?? err.message ?? 'Mint failed'
+        if (msg.includes('failed to estimate gas') && attempt < maxRetries - 1) {
+          toast.loading(`Network busy — retrying (${attempt + 1}/${maxRetries})…`, { id: 'mint' })
+          await new Promise((r) => setTimeout(r, 4000))
+          continue
+        }
+        throw new Error(msg)
+      }
+      if (!data) throw new Error('Mint failed after retries')
 
       setResult(data)
       setStep('done')
